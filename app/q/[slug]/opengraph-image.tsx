@@ -11,7 +11,8 @@ export const alt = "Jewellery quote from Parakh";
 export default async function OgImage({ params }: { params: { slug: string } }) {
   const q = SLUG_RE.test(params.slug) ? await getQuote(params.slug) : null;
   const title = q ? quoteTitle(q) : "Jewellery quote";
-  const total = q ? formatTotal(q.breakdown) : "";
+  // The built-in OG font has no ₹ glyph, so the preview image writes "Rs" instead.
+  const total = q ? formatTotal(q.breakdown).replace(/₹/g, "Rs ") : "";
   const detail = q ? `${q.purity} gold · ${formatWeightRange(q.weightMin, q.weightMax)} · incl. GST` : "";
 
   return new ImageResponse(
