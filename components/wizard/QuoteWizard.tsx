@@ -262,7 +262,7 @@ function StepDetails({ s, set, onNext, headingRef }: { s: State; set: (p: Partia
             maxLength={2000}
             value={s.enquiryText}
             onChange={(e) => set({ enquiryText: e.target.value })}
-            placeholder={"Example:\nHi, I want a 5 gram ring with a floral design in 22K gold.\nPlease share the price."}
+            placeholder={"Example:\nHi, I want a 5 gram ring with a floral design in 22K gold.\nPlease Share the Quotation."}
             className="block w-full resize-y rounded-t-card bg-transparent px-4 py-3.5 text-base outline-none placeholder:text-muted/70"
           />
           <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-2">
@@ -320,13 +320,13 @@ function StepDetails({ s, set, onNext, headingRef }: { s: State; set: (p: Partia
         </button>
       </form>
 
-      <aside aria-label="WhatsApp preview" className="relative hidden rounded-[18px] border border-line bg-[#EFE7DA] p-5 lg:block dark:bg-forest-tint">
+      <aside aria-label="WhatsApp preview" className="relative hidden rounded-[18px] border border-line bg-[#EFE7DA] p-5 lg:block">
         <span className="absolute -right-3 -top-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#25A85A] text-white shadow-lift" aria-hidden>
           <MessageCircle size={22} fill="currentColor" strokeWidth={1.5} />
         </span>
         <div className="ml-auto max-w-[85%] rounded-xl rounded-tr-sm bg-[#DDF3D1] px-3.5 py-2.5 text-[0.95rem] text-[#1F2A24] shadow-sm">
           <p className="whitespace-pre-wrap break-words">
-            {s.enquiryText.trim() || "Hi, I want a 5 gram ring with a floral design in 22K gold. Please share the price."}
+            {s.enquiryText.trim() || "Hi, I want a 5 gram ring with a floral design in 22K gold. Please Share the Quotation."}
           </p>
           <p className="mt-1 text-right text-[0.7rem] text-[#1F2A24]/60">{time} ✓✓</p>
         </div>
@@ -700,7 +700,7 @@ function StepSend({
             <path d="M25 41 l10 10 l20 -22" fill="none" stroke="rgb(var(--forest))" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50" strokeDashoffset="50" className="animate-draw" />
           </svg>
         </div>
-        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">
+        <h1 ref={headingRef} tabIndex={-1} className="text-2xl outline-none">
           Quote link ready!
         </h1>
         <p className="mt-1 text-muted">Share this link with your customer on WhatsApp.</p>

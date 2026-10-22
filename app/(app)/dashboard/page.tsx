@@ -35,7 +35,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold sm:text-[1.65rem]">
+          <h1 className="text-2xl sm:text-[1.65rem]">
             {greeting(now)}, {j.name} <span aria-hidden>👋</span>
           </h1>
           <p className="mt-1 text-muted">Here&apos;s your overview for today.</p>
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
 
       <section aria-labelledby="recent-h" className="card p-4 sm:p-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 id="recent-h" className="text-lg font-semibold">
+          <h2 id="recent-h" className="text-lg">
             Recent Quotes
           </h2>
           <Link href="/quotes" className="text-sm font-medium text-forest underline-offset-4 hover:underline">

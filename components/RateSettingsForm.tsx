@@ -92,7 +92,7 @@ export default function RateSettingsForm({ jeweller }: { jeweller: Jeweller }) {
     <form onSubmit={submit} className="space-y-6">
       <section aria-labelledby="rates-h" className="card space-y-5 p-5 sm:p-6">
         <div>
-          <h2 id="rates-h" className="text-lg font-semibold">
+          <h2 id="rates-h" className="text-lg">
             Gold rates (₹ per 10 g)
           </h2>
           <p className="text-sm text-muted">Last updated {formatLongDate(jeweller.rateUpdatedAt)}.</p>
@@ -124,7 +124,7 @@ export default function RateSettingsForm({ jeweller }: { jeweller: Jeweller }) {
       </section>
 
       <section aria-labelledby="defaults-h" className="card space-y-5 p-5 sm:p-6">
-        <h2 id="defaults-h" className="text-lg font-semibold">
+        <h2 id="defaults-h" className="text-lg">
           Quote defaults
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">

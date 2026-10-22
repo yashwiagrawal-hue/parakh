@@ -3,7 +3,7 @@ import { parseEnquiry, widenWeight } from "./parseEnquiry";
 
 describe("parseEnquiry", () => {
   it("reads the concept-board example", () => {
-    const r = parseEnquiry("Hi, I want a 5 gram ring with a floral design in 22K gold. Please share the price.");
+    const r = parseEnquiry("Hi, I want a 5 gram ring with a floral design in 22K gold. Please Share the Quotation.");
     expect(r).toEqual({ category: "Ring", purity: "22K", weightMin: 4, weightMax: 6, missing: [] });
   });
 
