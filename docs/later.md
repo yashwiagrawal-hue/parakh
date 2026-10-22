@@ -1,8 +1,10 @@
-# Later (out of scope for Thursday)
+# Later
 
-- **Quote storage at scale.** On Vercel, quotes are one private JSON file each in the `parakh-quotes` Blob store (`lib/store.ts`). "Recent quotes" lists the store, which is fine for a demo; move to a database when there are thousands of quotes or several jewellers.
-- **AI enquiry reader.** The paste-an-enquiry tab uses a local rule-based reader (`lib/enquiry.ts`), no API key. Swap in the n8n + Claude workflow from CLAUDE.md later; keep the same JSON shape and the confirm step.
-- **n8n workflows** (`parse-enquiry`, `save-quote`, `get-quote`) and the `x-parakh-secret` header.
-- **"Edit an approved quote" screen.** The API already accepts `supersedes` (new quote that references the old id); there is no button for it yet.
-- **Real jeweller data:** weights, 18K/14K weights (currently 22K weights times 0.88 / 0.78), making and wastage defaults, lock table.
-- **Draft quotes.** The `draft` status exists in the type but nothing saves drafts yet.
+- **Payments.** "Proceed to Pay Advance" opens a placeholder (`app/q/[slug]/pay`). Add a UPI intent link or a gateway, then mark the quote "Advance Paid". Ask before adding any paid service.
+- **Authentication.** The seeded jeweller is treated as logged in. `app/(app)/layout.tsx` and `lib/db.ts#getJeweller` are where a session would plug in.
+- **Customers, Payments, Reminders, Settings** pages are "Coming soon".
+- **Database.** `lib/db.ts` keeps one private Blob JSON file per quote. Move to Postgres/Supabase when there are thousands of quotes or several jewellers (only `lib/db.ts` changes).
+- **AI enquiry reader.** `lib/parseEnquiry.ts` is rule-based. A model can replace it later behind the same shape; the jeweller still confirms every field.
+- **Real catalogue.** Replace the SVG illustrations and typical weights with the jeweller's own photos and weight table.
+- **Link preview image in local dev.** `next/og` fails on Windows dev servers (a font file-path bug); it works on Vercel.
+- **Auto-deploy on push.** Give the Vercel GitHub app access to `yashwiagrawal-hue/parakh`.

@@ -1,31 +1,66 @@
-# Parakh MVP
+# Parakh
 
-Custom-jewellery quotes that customers can check and trust. Next.js (App Router, TypeScript), Tailwind, Vitest. No external API keys.
+Turn WhatsApp jewellery enquiries into trusted, transparent quotes in under 2 minutes: a full price breakdown,
+an IBJA benchmark comparison and written rate-lock terms, shared as one mobile-friendly link.
 
-## Run
+Next.js (App Router) · TypeScript · Tailwind CSS · lucide-react · Vitest. No external API keys.
+
+## Setup
 
 ```bash
 npm install
-npm test         # pricing + enquiry tests
+npm run seed     # demo jeweller "Shree Jewellers" + 4 sample quotes -> data/db.local.json
 npm run dev      # http://localhost:3000
+npm test         # pricing and enquiry-parser tests
 npm run lint
 npm run build
 ```
 
 ## Screens
 
-- `/` set today's rates (yours and IBJA), see recent quotes
-- `/new` pick a design (live preview and weight range) or paste an enquiry, then "Approve and create link"
-- `/q/[id]` public quote page, only for approved quotes
+| Route | What it is |
+| --- | --- |
+| `/` | Landing page |
+| `/dashboard` | Today's gold rate vs IBJA, stats, recent quotes |
+| `/quotes/new` | 4-step wizard: Details → Design → Review → Send |
+| `/quotes` | All quotes with status filter and search |
+| `/settings/rates` | 22K/24K/18K rates, IBJA, defaults, rate-lock terms |
+| `/q/[slug]` | Public customer quote (mobile-first, print to PDF) |
+| `/customers`, `/payments`, `/reminders`, `/settings` | Coming soon |
 
 ## Where things are
 
-- `lib/pricing.ts` all money maths (integer paise); `lib/checks.ts` rate sanity checks
-- `lib/enquiry.ts` local rule-based enquiry reader (never guesses; the jeweller confirms)
-- `lib/store.ts` quote store: private Vercel Blob on Vercel, `data/quotes.local.json` locally
-- `data/catalogue.json` demo designs and weights (placeholders), `data/jeweller.json` demo profile
+- `lib/pricing.ts`: all money maths (rates per 10 g, each line rounded to the rupee). Tests in `lib/pricing.test.ts`.
+- `lib/parseEnquiry.ts`: rule-based enquiry reader (weight, purity, category). Never guesses. Tests alongside.
+- `lib/checks.ts`: rate sanity checks (per-gram rate entered by mistake, >10% from IBJA, stale rates).
+- `lib/db.ts`: the only module that touches storage. Private Vercel Blob on Vercel, `data/db.local.json` locally.
+  Swap it for Postgres/Supabase later without touching the UI.
+- `lib/seed.ts`: demo jeweller, 8 designs, 4 board quotes (totals recalculated, never copied).
+- `public/designs/`: original SVG illustrations.
+
+## Storage
+
+Quotes snapshot the rate they were created with, so later rate changes never alter a sent quote. Only `status`
+and `viewedAt` change after sending. Locally everything is in `data/db.local.json` (git-ignored). To seed or
+use the Blob store from your machine, pull its token and opt in:
+
+```bash
+npx vercel env pull .env.local
+```
+
+```bash
+QUOTE_STORE=blob npx tsx --env-file=.env.local scripts/seed.ts
+```
 
 ## Deploy
 
 Live at https://parakh-iota.vercel.app (Vercel project `yash-7b87/parakh`, Blob store `parakh-quotes`).
-Deploy with `vercel deploy --prod`. Set `GST_RATE` and `MAX_IBJA_GAP` in Vercel if you change them.
+
+```bash
+npx vercel deploy --prod --scope yash-7b87
+```
+
+## Not built yet
+
+Real payments (the "Pay Advance" page is a marked placeholder), authentication, and the Coming soon pages.
+See `docs/later.md`.

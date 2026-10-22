@@ -6,5 +6,7 @@ node_modules
 next-env.d.ts
 *.tsbuildinfo
 data/quotes.local.json
+data/db.local.json
+data/uploads/
 .env*
 !.env.example

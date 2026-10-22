@@ -1,20 +1,10 @@
-import {
-  DEFAULT_MAX_IBJA_GAP,
-  IBJA_STALE_DAYS,
-  PER_10G_RATE_LIMIT,
-} from "./config";
-import { ibjaGapPct } from "./pricing";
-
-export interface RateCheckInput {
-  ratePerG: number;
-  ibjaRatePerG: number;
-  ibjaDate: string; // YYYY-MM-DD
-  today?: string; // YYYY-MM-DD, defaults to now
-  maxIbjaGap?: number;
-}
+export const MAX_IBJA_GAP_DEFAULT = 0.1;
+/** Below this, a "per 10 g" rate is almost certainly a per-gram rate. */
+export const MIN_PER_10G_RATE = 30000;
+export const IBJA_STALE_DAYS = 3;
 
 export interface RateCheckResult {
-  /** Problems that block saving the quote. */
+  /** Problems that block saving. */
   errors: string[];
   /** Notes that do not block but must be visible. */
   warnings: string[];
@@ -22,45 +12,42 @@ export interface RateCheckResult {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function dayNumber(isoDate: string): number {
-  return Math.floor(Date.parse(`${isoDate}T00:00:00Z`) / DAY_MS);
-}
-
-export function checkRates(input: RateCheckInput): RateCheckResult {
+/** Sanity checks on the 22K rate and IBJA benchmark, both in rupees per 10 g. */
+export function checkRates(input: {
+  ratePer10g: number;
+  ibjaPer10g: number;
+  rateUpdatedAt?: string;
+  now?: Date;
+  maxGap?: number;
+}): RateCheckResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const maxGap = input.maxIbjaGap ?? DEFAULT_MAX_IBJA_GAP;
-  const { ratePerG, ibjaRatePerG } = input;
+  const { ratePer10g, ibjaPer10g } = input;
 
-  if (!(ratePerG > 0) || !(ibjaRatePerG > 0)) {
-    errors.push("Enter both the shop rate and the IBJA rate per gram.");
+  if (!(ratePer10g > 0) || !(ibjaPer10g > 0)) {
+    errors.push("Enter both your rate and the IBJA rate per 10 g.");
+    return { errors, warnings };
+  }
+  if (ratePer10g < MIN_PER_10G_RATE || ibjaPer10g < MIN_PER_10G_RATE) {
+    errors.push("This looks like a per-gram rate. Enter the rate per 10 g.");
     return { errors, warnings };
   }
 
-  if (ratePerG > PER_10G_RATE_LIMIT || ibjaRatePerG > PER_10G_RATE_LIMIT) {
-    errors.push("This looks like a per-10 g rate. Enter the rate per gram.");
-    return { errors, warnings };
-  }
-
-  const gap = ibjaGapPct(ratePerG, ibjaRatePerG);
-  if (Math.abs(gap) > maxGap) {
-    const pct = (Math.abs(gap) * 100).toFixed(1);
+  const gap = (ratePer10g - ibjaPer10g) / ibjaPer10g;
+  if (Math.abs(gap) > (input.maxGap ?? MAX_IBJA_GAP_DEFAULT)) {
     errors.push(
-      `Today's rate is ${pct}% ${gap > 0 ? "above" : "below"} IBJA. Check it before quoting.`,
+      `Today's rate is ${(Math.abs(gap) * 100).toFixed(1)}% ${gap > 0 ? "above" : "below"} IBJA. Check it before quoting.`,
     );
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.ibjaDate) || Number.isNaN(Date.parse(input.ibjaDate))) {
-    errors.push("Enter the date of the IBJA rate.");
-  } else {
-    const today = input.today ?? new Date().toISOString().slice(0, 10);
-    const age = dayNumber(today) - dayNumber(input.ibjaDate);
-    if (age > IBJA_STALE_DAYS) {
-      warnings.push(
-        `The IBJA rate is from ${input.ibjaDate}, ${age} days ago. The date will be shown on the quote.`,
-      );
-    }
+  if (input.rateUpdatedAt) {
+    const age = Math.floor(((input.now ?? new Date()).getTime() - Date.parse(input.rateUpdatedAt)) / DAY_MS);
+    if (age > IBJA_STALE_DAYS) warnings.push(`Rates were last updated ${age} days ago. Update them before quoting.`);
   }
-
   return { errors, warnings };
+}
+
+export function maxIbjaGap(): number {
+  const n = Number(process.env.MAX_IBJA_GAP);
+  return Number.isFinite(n) && n > 0 ? n : MAX_IBJA_GAP_DEFAULT;
 }

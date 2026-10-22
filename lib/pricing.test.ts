@@ -1,148 +1,111 @@
 import { describe, expect, it } from "vitest";
-import {
-  computeQuote,
-  formatGap,
-  formatPaise,
-  lockEndsAt,
-  priceAtWeight,
-  type PricingInput,
-} from "./pricing";
 import { checkRates } from "./checks";
+import { formatDiff, formatINR, formatTotal } from "./format";
+import {
+  advanceAmount,
+  computeQuote,
+  derivedRates,
+  lockExpiry,
+  priceAt,
+  validateSpec,
+  type PriceInput,
+} from "./pricing";
 
-const base: PricingInput = {
-  weightMinG: 18,
-  weightMaxG: 18,
-  purity: "22K",
-  ratePerG: 13430,
-  ibjaRatePerG: 13430,
-  making: { type: "percent", value: 0.12 },
-  wastagePct: 0.08,
-  stones: [],
-  lockDays: 7,
-  lockTable: { 7: 0.25, 15: 0.4, 30: 0.6 },
+const board: PriceInput = {
+  ratePer10g: 134300,
+  weightMin: 5,
+  weightMax: 5,
+  makingPct: 9,
+  wastagePct: 0,
+  stones: 4000,
+  gstPct: 3,
 };
 
-describe("pricing engine", () => {
-  it("matches the required example (18 g, 22K, 13,430/g)", () => {
-    const line = priceAtWeight(18, base);
-    expect(line.goldValue).toBe(24174000);
-    expect(line.wastage).toBe(1933920);
-    expect(line.making).toBe(2900880);
-    expect(line.subtotal).toBe(29008800);
-    expect(line.gst).toBe(870264);
-    expect(line.total).toBe(29879064);
-    expect(line.perGram).toBe(1659948);
-    expect(formatPaise(line.total)).toBe("₹2,98,791");
+describe("pricing", () => {
+  it("matches the concept board (5 g, ₹1,34,300/10g, 9% making, ₹4,000 stones)", () => {
+    const l = priceAt(5, board);
+    expect(l.gold).toBe(67150);
+    expect(l.making).toBe(6044);
+    expect(l.wastage).toBe(0);
+    expect(l.stones).toBe(4000);
+    expect(l.gst).toBe(2316);
+    expect(l.total).toBe(79510);
+    expect(formatINR(l.total)).toBe("₹79,510");
   });
 
-  it("supports per-gram making", () => {
-    const line = priceAtWeight(10, { ...base, making: { type: "perGram", value: 800 } });
-    expect(line.making).toBe(800000);
+  it("shows a single estimate when min = max", () => {
+    const r = computeQuote(board);
+    expect(r.single).toBe(true);
+    expect(formatTotal(r)).toBe("₹79,510");
   });
 
-  it("supports flat making", () => {
-    const line = priceAtWeight(10, { ...base, making: { type: "flat", value: 5000 } });
-    expect(line.making).toBe(500000);
+  it("shows a range when min ≠ max", () => {
+    const r = computeQuote({ ...board, weightMin: 4, weightMax: 6 });
+    expect(r.single).toBe(false);
+    expect(r.min.total).toBeLessThan(r.max.total);
+    expect(formatTotal(r)).toBe(`${formatINR(r.min.total)} – ${formatINR(r.max.total)}`);
   });
 
-  it("adds stones before GST", () => {
-    const line = priceAtWeight(5, {
-      ...base,
-      stones: [
-        { label: "Pearl", priceRupees: 2200 },
-        { label: "CZ", priceRupees: 800.5 },
-      ],
-    });
-    expect(line.stones).toBe(300050);
-    expect(line.subtotal).toBe(line.goldValue + line.wastage + line.making + 300050);
-    expect(line.gst).toBe(Math.round(line.subtotal * 0.03));
+  it("charges wastage on gold cost", () => {
+    const l = priceAt(10, { ...board, wastagePct: 2 });
+    expect(l.gold).toBe(134300);
+    expect(l.wastage).toBe(2686);
+    expect(l.subtotal).toBe(l.gold + l.making + l.wastage + l.stones);
   });
 
-  it("can charge making on gold plus wastage when configured", () => {
-    const line = priceAtWeight(18, base, { gstRate: 0.03, makingBase: "goldPlusWastage" });
-    expect(line.making).toBe(Math.round((24174000 + 1933920) * 0.12));
+  it("rounds every line to whole rupees and the total is the sum of the lines", () => {
+    const l = priceAt(3.37, { ...board, ratePer10g: 133333, makingPct: 11.5, wastagePct: 1.25, stones: 999.6 });
+    for (const v of [l.gold, l.making, l.wastage, l.stones, l.gst, l.total]) expect(Number.isInteger(v)).toBe(true);
+    expect(l.total).toBe(l.gold + l.making + l.wastage + l.stones + l.gst);
   });
 
-  it("prices min and max weight separately", () => {
-    const r = computeQuote({ ...base, weightMinG: 14, weightMaxG: 16 });
-    expect(r.min.weightG).toBe(14);
-    expect(r.max.weightG).toBe(16);
-    expect(r.max.total).toBeGreaterThan(r.min.total);
-    expect(r.min.total).toBe(priceAtWeight(14, base).total);
-    // per-gram stays about the same when there are no stones or flat charges
-    expect(Math.abs(r.max.perGram - r.min.perGram)).toBeLessThanOrEqual(1);
+  it("derives 24K and 18K from 22K by purity ratio", () => {
+    expect(derivedRates(134300)).toEqual({ rate24k: 146509, rate18k: 109882 });
   });
 
-  it("uses the same price at min and max when weight is confirmed", () => {
-    const r = computeQuote(base);
-    expect(r.min.total).toBe(r.max.total);
+  it("computes the advance and lock expiry", () => {
+    expect(advanceAmount(79510, 25)).toBe(19878);
+    expect(lockExpiry("2026-10-22T05:00:00.000Z", 7)).toBe("2026-10-29T05:00:00.000Z");
   });
 
-  it.each([
-    [7, 0.25],
-    [15, 0.4],
-    [30, 0.6],
-  ])("computes the advance for a %i-day lock", (days, share) => {
-    const r = computeQuote({ ...base, lockDays: days });
-    expect(r.advanceShare).toBe(share);
-    expect(r.advance).toBe(Math.round(29879064 * share));
+  it("formats the IBJA difference", () => {
+    expect(formatDiff(134300, 134200)).toBe("+₹100");
+    expect(formatDiff(134100, 134200)).toBe("−₹100");
+    expect(formatDiff(134200, 134200)).toBe("same as IBJA");
+    expect(formatINR(134300)).toBe("₹1,34,300");
   });
 
-  it("has no advance when the lock length is not in the table", () => {
-    expect(computeQuote({ ...base, lockDays: 9 }).advance).toBe(0);
-  });
-
-  it("calculates the IBJA gap", () => {
-    const r = computeQuote({ ...base, ratePerG: 13700, ibjaRatePerG: 13430 });
-    expect(r.ibjaGapPct).toBeCloseTo(0.0201, 3);
-    expect(formatGap(r.ibjaGapPct)).toBe("2.0% above IBJA");
-    expect(formatGap(-0.0123)).toBe("1.2% below IBJA");
-    expect(formatGap(0)).toBe("Same as IBJA");
-  });
-
-  it("keeps money as integers and rounds to whole rupees only for display", () => {
-    const line = priceAtWeight(3.8, { ...base, ratePerG: 13433.33 });
-    for (const v of [line.goldValue, line.wastage, line.making, line.gst, line.total, line.perGram]) {
-      expect(Number.isInteger(v)).toBe(true);
-    }
-    expect(formatPaise(29879064)).toBe("₹2,98,791");
-    expect(formatPaise(29879049)).toBe("₹2,98,790");
-  });
-
-  it("adds lock days to the approval date", () => {
-    expect(lockEndsAt("2026-10-22T10:00:00.000Z", 15)).toBe("2026-11-06T10:00:00.000Z");
+  it("validates the design step", () => {
+    expect(validateSpec({ weightMin: 4, weightMax: 6, makingPct: 9, wastagePct: 0, stones: 0 })).toEqual({});
+    expect(validateSpec({ weightMin: 6, weightMax: 4, makingPct: 9, wastagePct: 0, stones: 0 }).weight).toBeDefined();
+    expect(validateSpec({ weightMin: 0, weightMax: 4, makingPct: 9, wastagePct: 0, stones: 0 }).weight).toBeDefined();
+    expect(validateSpec({ weightMin: 4, weightMax: 6, makingPct: 0, wastagePct: 0, stones: 0 }).making).toBeDefined();
+    expect(validateSpec({ weightMin: 4, weightMax: 6, makingPct: 9, wastagePct: -1, stones: 0 }).wastage).toBeDefined();
   });
 });
 
-describe("rate sanity checks", () => {
-  const ok = { ratePerG: 13430, ibjaRatePerG: 13300, ibjaDate: "2026-10-22", today: "2026-10-22" };
+describe("rate sanity checks (per 10 g)", () => {
+  const ok = { ratePer10g: 134300, ibjaPer10g: 134200 };
 
   it("passes a normal rate", () => {
     expect(checkRates(ok)).toEqual({ errors: [], warnings: [] });
   });
 
+  it("blocks a per-gram rate entered as per 10 g", () => {
+    expect(checkRates({ ratePer10g: 13430, ibjaPer10g: 134200 }).errors).toEqual([
+      "This looks like a per-gram rate. Enter the rate per 10 g.",
+    ]);
+  });
+
   it("blocks a rate more than 10% from IBJA", () => {
-    const r = checkRates({ ...ok, ratePerG: 15000 });
-    expect(r.errors).toEqual(["Today's rate is 12.8% above IBJA. Check it before quoting."]);
+    expect(checkRates({ ratePer10g: 150000, ibjaPer10g: 134200 }).errors[0]).toBe(
+      "Today's rate is 11.8% above IBJA. Check it before quoting.",
+    );
   });
 
-  it("honours a custom maximum gap", () => {
-    expect(checkRates({ ...ok, ratePerG: 13700, maxIbjaGap: 0.02 }).errors).toHaveLength(1);
-  });
-
-  it("blocks a per-10 g rate", () => {
-    const r = checkRates({ ...ok, ratePerG: 134300, ibjaRatePerG: 133000 });
-    expect(r.errors).toEqual(["This looks like a per-10 g rate. Enter the rate per gram."]);
-  });
-
-  it("warns when the IBJA date is older than 3 days", () => {
-    const r = checkRates({ ...ok, ibjaDate: "2026-10-18" });
+  it("warns when rates are older than 3 days", () => {
+    const r = checkRates({ ...ok, rateUpdatedAt: "2026-10-17T00:00:00Z", now: new Date("2026-10-22T00:00:00Z") });
     expect(r.errors).toEqual([]);
     expect(r.warnings).toHaveLength(1);
-    expect(checkRates({ ...ok, ibjaDate: "2026-10-19" }).warnings).toEqual([]);
-  });
-
-  it("blocks missing rates", () => {
-    expect(checkRates({ ...ok, ratePerG: 0 }).errors).toHaveLength(1);
   });
 });

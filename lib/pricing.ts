@@ -1,139 +1,92 @@
-import { DEFAULT_CONFIG, type PricingConfig } from "./config";
+/**
+ * Pricing engine. Pure functions, no I/O. AI never calculates money: every number on a quote comes from here.
+ * Rates are rupees per 10 g. Each line is rounded to the nearest rupee, and totals are sums of the
+ * rounded lines so the breakdown always adds up.
+ */
 
-export type Purity = "22K" | "18K" | "14K";
-export const PURITIES: Purity[] = ["22K", "18K", "14K"];
-
-export type Making =
-  | { type: "percent"; value: number } // value is a fraction, 0.12 = 12%
-  | { type: "perGram"; value: number } // rupees per gram
-  | { type: "flat"; value: number }; // rupees
-
-export interface Stone {
-  label: string;
-  priceRupees: number;
+export interface PriceInput {
+  ratePer10g: number;
+  weightMin: number;
+  weightMax: number;
+  makingPct: number; // 9 = 9%
+  wastagePct: number;
+  stones: number; // rupees
+  gstPct: number; // 3 = 3%
 }
 
-/** days -> advance share (0.25 = 25%) */
-export type LockTable = Record<number, number>;
-
-export interface PricingInput {
-  weightMinG: number;
-  weightMaxG: number;
-  purity: Purity;
-  ratePerG: number; // rupees per gram
-  ibjaRatePerG: number; // rupees per gram
-  making: Making;
-  wastagePct: number; // fraction, 0.08 = 8%
-  stones: Stone[];
-  lockDays: number;
-  lockTable: LockTable;
-}
-
-/** All money below is integer paise. */
-export interface PriceLine {
-  weightG: number;
-  goldValue: number;
-  wastage: number;
+export interface PriceLines {
+  weight: number;
+  gold: number;
   making: number;
+  wastage: number;
   stones: number;
   subtotal: number;
   gst: number;
   total: number;
-  perGram: number; // all-in price per gram
 }
 
 export interface PriceRange {
-  min: PriceLine;
-  max: PriceLine;
-  ibjaGapPct: number; // fraction, 0.021 = 2.1% above IBJA
-  advance: number; // paise, based on the maximum total
-  advanceShare: number;
+  min: PriceLines;
+  max: PriceLines;
+  /** True when min weight = max weight, so the quote shows a single estimate. */
+  single: boolean;
 }
 
-const toPaise = (rupees: number): number => Math.round(rupees * 100);
+export const DEFAULT_GST_PCT = 3;
 
-export function priceAtWeight(
-  weightG: number,
-  input: PricingInput,
-  config: PricingConfig = DEFAULT_CONFIG,
-): PriceLine {
-  const ratePaise = toPaise(input.ratePerG);
-  const goldValue = Math.round(weightG * ratePaise);
-  const wastage = Math.round(goldValue * input.wastagePct);
-  const makingBase = config.makingBase === "goldPlusWastage" ? goldValue + wastage : goldValue;
-
-  let making: number;
-  switch (input.making.type) {
-    case "percent":
-      making = Math.round(makingBase * input.making.value);
-      break;
-    case "perGram":
-      making = Math.round(weightG * toPaise(input.making.value));
-      break;
-    case "flat":
-      making = toPaise(input.making.value);
-      break;
-  }
-
-  const stones = input.stones.reduce((sum, s) => sum + toPaise(s.priceRupees), 0);
-  const subtotal = goldValue + wastage + making + stones;
-  const gst = Math.round(subtotal * config.gstRate);
-  const total = subtotal + gst;
-  const perGram = weightG > 0 ? Math.round(total / weightG) : 0;
-
-  return { weightG, goldValue, wastage, making, stones, subtotal, gst, total, perGram };
+export function priceAt(weight: number, input: PriceInput): PriceLines {
+  const gold = Math.round((input.ratePer10g / 10) * weight);
+  const making = Math.round(gold * (input.makingPct / 100));
+  const wastage = Math.round(gold * (input.wastagePct / 100));
+  const stones = Math.round(input.stones);
+  const subtotal = gold + making + wastage + stones;
+  const gst = Math.round(subtotal * (input.gstPct / 100));
+  return { weight, gold, making, wastage, stones, subtotal, gst, total: subtotal + gst };
 }
 
-export function ibjaGapPct(ratePerG: number, ibjaRatePerG: number): number {
-  return (ratePerG - ibjaRatePerG) / ibjaRatePerG;
-}
-
-export function computeQuote(
-  input: PricingInput,
-  config: PricingConfig = DEFAULT_CONFIG,
-): PriceRange {
-  const min = priceAtWeight(input.weightMinG, input, config);
-  const max = priceAtWeight(input.weightMaxG, input, config);
-  const advanceShare = input.lockTable[input.lockDays] ?? 0;
+export function computeQuote(input: PriceInput): PriceRange {
   return {
-    min,
-    max,
-    ibjaGapPct: ibjaGapPct(input.ratePerG, input.ibjaRatePerG),
-    advance: Math.round(max.total * advanceShare),
-    advanceShare,
+    min: priceAt(input.weightMin, input),
+    max: priceAt(input.weightMax, input),
+    single: input.weightMin === input.weightMax,
   };
 }
 
-/** lockEndsAt = approvedAt + lockDays (ISO string in, ISO string out). */
-export function lockEndsAt(approvedAt: string, lockDays: number): string {
-  const d = new Date(approvedAt);
-  d.setUTCDate(d.getUTCDate() + lockDays);
+/** 24K and 18K derived from the 22K rate by purity ratio (rupees per 10 g, rounded). */
+export function derivedRates(rate22k: number): { rate24k: number; rate18k: number } {
+  return { rate24k: Math.round((rate22k * 24) / 22), rate18k: Math.round((rate22k * 18) / 22) };
+}
+
+export function advanceAmount(totalMax: number, advancePct: number): number {
+  return Math.round(totalMax * (advancePct / 100));
+}
+
+export function lockExpiry(createdAtIso: string, days: number): string {
+  const d = new Date(createdAtIso);
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString();
 }
 
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
-/** Round to whole rupees for display only. */
-export function formatPaise(paise: number): string {
-  return inr.format(Math.round(paise / 100));
+export interface InputErrors {
+  weight?: string;
+  making?: string;
+  wastage?: string;
+  stones?: string;
 }
 
-export function formatRupees(rupees: number): string {
-  return inr.format(Math.round(rupees));
-}
-
-/** Per-gram range, lowest first. Stones and flat making make the lighter piece dearer per gram. */
-export function perGramRange(r: PriceRange): [number, number] {
-  return [Math.min(r.min.perGram, r.max.perGram), Math.max(r.min.perGram, r.max.perGram)];
-}
-
-export function formatGap(gap: number): string {
-  const pct = Math.abs(gap * 100);
-  const text = pct.toFixed(1);
-  if (Number(text) === 0) return "Same as IBJA";
-  return `${text}% ${gap > 0 ? "above" : "below"} IBJA`;
+/** Validation for the design step: min <= max and values in range. */
+export function validateSpec(s: {
+  weightMin: number;
+  weightMax: number;
+  makingPct: number;
+  wastagePct: number;
+  stones: number;
+}): InputErrors {
+  const e: InputErrors = {};
+  if (!(s.weightMin > 0) || !(s.weightMax > 0)) e.weight = "Enter both weights in grams, more than 0.";
+  else if (s.weightMin > s.weightMax) e.weight = "The minimum weight must not be more than the maximum.";
+  if (!(s.makingPct > 0) || s.makingPct > 100) e.making = "Enter making charges between 0 and 100%.";
+  if (!(s.wastagePct >= 0) || s.wastagePct > 100) e.wastage = "Enter wastage between 0 and 100%.";
+  if (!(s.stones >= 0)) e.stones = "Enter stone charges as 0 or more.";
+  return e;
 }
