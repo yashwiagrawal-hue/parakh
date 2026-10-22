@@ -73,7 +73,7 @@ export function buildQuote(
     enquiryText: draft.enquiryText || null,
     referencePhotoUrl: draft.referencePhotoUrl,
     designId: design?.id ?? null,
-    designName: design?.name ?? (draft.category === "Custom/Other" ? "Custom piece" : `Custom ${draft.category}`),
+    designName: pieceName(draft.category),
     designImageUrl: design?.imageUrl ?? null,
     category: draft.category,
     purity: draft.purity,
@@ -94,6 +94,11 @@ export function buildQuote(
     createdAt: opts.createdAt,
     viewedAt: null,
   };
+}
+
+/** "Custom Ring", as on the quote preview and customer view. */
+export function pieceName(category: Quote["category"]): string {
+  return category === "Custom/Other" ? "Custom Piece" : `Custom ${category}`;
 }
 
 /** "Your Custom Ring Quote" */

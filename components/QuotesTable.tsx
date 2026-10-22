@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDate, formatTotal, formatWeightRange } from "@/lib/format";
+import { formatDate, formatGramsFixed, formatTotal, formatWeightRange } from "@/lib/format";
 import { effectiveStatus, type Quote } from "@/lib/types";
 import StatusPill from "./StatusPill";
 
@@ -37,7 +37,9 @@ export default function QuotesTable({ quotes }: { quotes: QuoteRow[] }) {
                 </Link>
               </td>
               <td className="py-3.5 pr-4">{q.designName}</td>
-              <td className="tnum py-3.5 pr-4 text-right">{formatWeightRange(q.weightMin, q.weightMax)}</td>
+              <td className="tnum py-3.5 pr-4 text-right">
+                {q.weightMin === q.weightMax ? formatGramsFixed(q.weightMin) : formatWeightRange(q.weightMin, q.weightMax)}
+              </td>
               <td className="tnum py-3.5 pr-4 text-right">{formatTotal(q.breakdown)}</td>
               <td className="py-3.5 pr-4">
                 <StatusPill status={effectiveStatus(q)} />

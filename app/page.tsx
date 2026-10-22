@@ -28,9 +28,9 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <header className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-5 sm:px-8">
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center gap-6 px-4 py-5 sm:px-8">
         <Logo />
-        <nav aria-label="Site" className="ml-8 hidden gap-8 text-sm md:flex">
+        <nav aria-label="Site" className="ml-10 hidden gap-9 text-sm md:flex">
           {NAV.map((n) => (
             <a key={n} href={`#${n.toLowerCase().replace(/\s+/g, "-")}`} className="text-ink/80 hover:text-ink">
               {n}
@@ -48,55 +48,68 @@ export default function LandingPage() {
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pt-14">
-          <div>
-            <p className="eyebrow">Fair prices. Happy customers.</p>
-            <h1 className="mt-5 font-serif text-[2.6rem] leading-[1.08] sm:text-6xl">
-              Turn WhatsApp enquiries into <em className="text-gold-ink">trusted jewellery quotes</em> in under{" "}
-              <em className="text-gold-ink">2&nbsp;minutes.</em>
-            </h1>
-            <p className="mt-6 max-w-lg text-lg text-muted">
-              Full price breakdown, IBJA comparison and written rate-lock terms — all in one link.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/dashboard" className="btn px-6 py-3">
-                Get Started Free
-              </Link>
-              <a href="#how-it-works" className="btn-outline px-6 py-3">
-                <PlayCircle aria-hidden size={19} strokeWidth={1.75} /> Watch Demo
-              </a>
-            </div>
-
-            <ul id="features" className="mt-14 grid gap-6 sm:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, text }) => (
-                <li key={title}>
-                  <Icon aria-hidden size={24} strokeWidth={1.5} className="text-gold-ink" />
-                  <p className="mt-3 font-semibold">{title}</p>
-                  <p className="text-sm text-muted">{text}</p>
-                </li>
-              ))}
-            </ul>
+        {/* Hero: copy on the left; on wide screens a warm photo panel bleeds off the right edge with the quote card over it. */}
+        <section className="relative">
+          <div
+            aria-hidden
+            className="absolute inset-y-0 right-0 -top-[76px] hidden w-[46%] overflow-hidden bg-[linear-gradient(160deg,#F1E6D3_0%,#E7D5B7_55%,#D9C19A_100%)] lg:block"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/photos/hero-ring.jpg"
+              alt=""
+              className="absolute left-0 top-[60px] h-auto w-full [mask-image:linear-gradient(to_bottom,black_75%,transparent)]"
+            />
+            <div className="absolute bottom-[6%] left-[8%] h-[34%] w-[70%] rounded-[40%_40%_12px_12px] bg-[linear-gradient(180deg,#EDE0C8,#D8C29D)] opacity-80 blur-[1px]" />
+            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-ivory to-transparent" />
           </div>
 
-          <div className="relative mx-auto w-full max-w-xl" aria-hidden>
-            <div className="relative aspect-[5/4] overflow-hidden rounded-[28px] bg-[radial-gradient(ellipse_at_30%_25%,#FFFDF6_0%,#F3E7D2_55%,#E3CFAD_100%)] shadow-lift dark:opacity-90">
-              <div className="absolute -left-10 bottom-0 h-2/3 w-2/3 rounded-full bg-[#EBDDC2] blur-2xl" />
-              <div className="absolute inset-x-10 bottom-10 h-10 rounded-[50%] bg-[#C9A877]/30 blur-md" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/designs/floral-ring.svg" alt="" className="absolute left-[6%] top-[8%] w-[62%] rounded-[24px] mix-blend-multiply" />
+          <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-6 sm:px-8 lg:min-h-[600px] lg:grid-cols-[1.3fr_1fr] lg:pb-20 lg:pt-12">
+            <div className="lg:pr-4">
+              <p className="eyebrow">Fair prices. Happy customers.</p>
+              <h1 className="mt-6 font-serif text-[2.5rem] font-normal leading-[1.12] tracking-[-0.01em] sm:text-5xl lg:text-[2.7rem] xl:text-[3.1rem]">
+                Turn WhatsApp enquiries <br className="hidden lg:block" />
+                into <em className="text-gold-ink">trusted jewellery quotes</em> <br className="hidden lg:block" />
+                <em>in under</em> <em className="text-gold-ink">2&nbsp;minutes.</em>
+              </h1>
+              <p className="mt-7 max-w-md text-lg leading-relaxed text-ink/80">
+                Full price breakup, IBJA comparison and written rate-lock terms — all in one link.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link href="/dashboard" className="btn px-7 py-3">
+                  Get Started Free
+                </Link>
+                <a href="#how-it-works" className="btn-outline px-6 py-3">
+                  <PlayCircle aria-hidden size={19} strokeWidth={1.75} /> Watch Demo
+                </a>
+              </div>
+
+              <ul id="features" className="mt-14 grid max-w-xl gap-6 sm:grid-cols-3">
+                {FEATURES.map(({ icon: Icon, title, text }) => (
+                  <li key={title}>
+                    <Icon aria-hidden size={24} strokeWidth={1.5} className="text-gold-ink" />
+                    <p className="mt-3 font-semibold">{title}</p>
+                    <p className="text-sm text-muted">{text}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="absolute -bottom-8 right-0 w-[min(19rem,82%)] rotate-[-4deg] rounded-2xl border border-line bg-surface/95 p-5 text-ink shadow-lift backdrop-blur sm:-right-4 sm:top-[22%] sm:bottom-auto">
-              <p className="font-semibold">Custom Ring Quote</p>
-              <dl className="tnum mt-3 space-y-2 text-sm">
-                <div className="flex justify-between gap-4">
-                  <dt>Gold ({SAMPLE.weight}g)</dt>
-                  <dd className="text-muted">{formatINR(SEED_JEWELLER.rate22k)}/10g</dd>
-                </div>
-                <div className="flex justify-between gap-4 text-muted">
-                  <dt />
-                  <dd>{formatINR(sample.gold)}</dd>
-                </div>
+            <div className="relative" aria-hidden>
+              {/* Phones and tablets: the photo sits above the card instead of bleeding off the edge. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/photos/hero-ring.jpg" alt="" className="aspect-[4/3] w-full rounded-[24px] object-cover object-left shadow-soft lg:hidden" />
+
+              <div className="relative mx-auto -mt-10 w-[min(20rem,88%)] rotate-[-4deg] rounded-2xl border border-white/60 bg-surface/95 p-5 text-ink shadow-lift backdrop-blur sm:w-[21rem] lg:absolute lg:left-[14%] lg:top-[36%] lg:mt-0">
+                <p className="font-semibold">Custom Ring Quote</p>
+                <dl className="tnum mt-3 space-y-2.5 text-sm">
+                  <div className="flex justify-between gap-4 border-b border-line/70 pb-2">
+                    <dt>
+                      Gold ({SAMPLE.weight}g)
+                      <span className="block text-xs text-muted">{formatINR(SEED_JEWELLER.rate22k)}/10g</span>
+                    </dt>
+                    <dd>{formatINR(sample.gold)}</dd>
+                  </div>
                 <div className="flex justify-between gap-4">
                   <dt>Making Charges ({SAMPLE.making}%)</dt>
                   <dd>{formatINR(sample.making)}</dd>
@@ -118,6 +131,7 @@ export default function LandingPage() {
                 <Lock size={18} className="shrink-0 text-gold-ink" />
                 Rate locked for 7 days on 25% advance
               </p>
+              </div>
             </div>
           </div>
         </section>

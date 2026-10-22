@@ -23,6 +23,7 @@ import { checkRates } from "@/lib/checks";
 import { formatWeightRange } from "@/lib/format";
 import { parseEnquiry } from "@/lib/parseEnquiry";
 import { computeQuote, validateSpec, type InputErrors } from "@/lib/pricing";
+import { pieceName } from "@/lib/quotes";
 import { quoteMessage, whatsappUrl } from "@/lib/whatsapp";
 import { CATEGORIES, PURITIES, type Category, type Design, type Jeweller, type Purity } from "@/lib/types";
 import Stepper from "./Stepper";
@@ -161,7 +162,7 @@ export default function QuoteWizard({ jeweller, designs }: { jeweller: Jeweller;
           <StepSend
             s={s}
             jeweller={jeweller}
-            designName={design?.name ?? (s.category === "Custom/Other" ? "Custom piece" : `Custom ${s.category}`)}
+            designName={pieceName(design?.category ?? s.category)}
             breakdown={computeQuote({ ratePer10g: rate, ...spec, gstPct: jeweller.defaultGstPct })}
             headingRef={headingRef}
           />
@@ -415,7 +416,7 @@ function StepDesign({
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={d.imageUrl} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                  <img src={d.thumbUrl} alt="" className="aspect-square w-full rounded-lg object-cover" />
                   <span className={`mt-1.5 block pb-1 ${selected ? "font-semibold text-forest" : ""}`}>{d.name}</span>
                 </button>
               );
@@ -542,7 +543,7 @@ function StepReview({
   const [error, setError] = useState<string | null>(null);
   const breakdown = computeQuote({ ratePer10g: rate, ...spec, gstPct: jeweller.defaultGstPct });
   const check = checkRates({ ratePer10g: jeweller.rate22k, ibjaPer10g: jeweller.ibjaRate22k, rateUpdatedAt: jeweller.rateUpdatedAt });
-  const name = design?.name ?? (s.category === "Custom/Other" ? "Custom piece" : `Custom ${s.category}`);
+  const name = pieceName(design?.category ?? s.category);
 
   async function confirm() {
     setSaving(true);

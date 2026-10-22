@@ -90,6 +90,15 @@ export async function createQuote(q: Quote): Promise<void> {
   await writeLocal(db);
 }
 
+/** Seed script only: rewrites the demo quotes. Real quotes go through createQuote. */
+export async function replaceSeedQuote(q: Quote): Promise<void> {
+  if (!q.slug.startsWith("seed")) throw new Error("Only seed quotes can be replaced.");
+  if (blobEnabled()) return writeBlobJson(quotePath(q.slug), q, true);
+  const db = await readLocal();
+  db.quotes[q.slug] = q;
+  await writeLocal(db);
+}
+
 export async function getQuote(slug: string): Promise<Quote | null> {
   if (blobEnabled()) return readBlobJson<Quote>(quotePath(slug));
   return (await readLocal()).quotes[slug] ?? null;

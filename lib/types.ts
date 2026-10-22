@@ -39,7 +39,10 @@ export interface Design {
   id: string;
   name: string;
   category: Category;
+  /** Large photo for the quote preview and customer view. */
   imageUrl: string;
+  /** Small square photo for the design tile. */
+  thumbUrl: string;
   typicalWeightMin: number;
   typicalWeightMax: number;
 }

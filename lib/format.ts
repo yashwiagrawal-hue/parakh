@@ -18,12 +18,15 @@ export function formatLine(min: number, max: number): string {
   return min === max ? formatINR(max) : `${formatINR(min)} – ${formatINR(max)}`;
 }
 
-export function formatGrams(g: number): string {
+/** Table column style: "8.5 g", "32.0 g". */
+export function formatGramsFixed(g: number): string {
   return `${Number.isInteger(g) ? g.toFixed(1) : String(Math.round(g * 100) / 100)} g`;
 }
 
+/** Description style, as on the board: "5 g", "4 – 6 g", "8.5 g". */
 export function formatWeightRange(min: number, max: number): string {
-  return min === max ? formatGrams(min) : `${formatGrams(min).replace(" g", "")} – ${formatGrams(max)}`;
+  const n = (g: number) => String(Math.round(g * 100) / 100);
+  return min === max ? `${n(min)} g` : `${n(min)} – ${n(max)} g`;
 }
 
 /** Difference from IBJA, e.g. "+₹100" or "−₹50". */
