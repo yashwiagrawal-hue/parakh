@@ -22,10 +22,10 @@ npm run build
 
 - `lib/pricing.ts` all money maths (integer paise); `lib/checks.ts` rate sanity checks
 - `lib/enquiry.ts` local rule-based enquiry reader (never guesses; the jeweller confirms)
-- `lib/store.ts` local JSON quote store. Temporary on Vercel, see `docs/later.md`
+- `lib/store.ts` quote store: private Vercel Blob on Vercel, `data/quotes.local.json` locally
 - `data/catalogue.json` demo designs and weights (placeholders), `data/jeweller.json` demo profile
 
 ## Deploy
 
-Push to GitHub and import in Vercel. Set `GST_RATE` and `MAX_IBJA_GAP` if you change them.
-Before real use, replace the file store with a database so quote links persist.
+Live at https://parakh-iota.vercel.app (Vercel project `yash-7b87/parakh`, Blob store `parakh-quotes`).
+Deploy with `vercel deploy --prod`. Set `GST_RATE` and `MAX_IBJA_GAP` in Vercel if you change them.
