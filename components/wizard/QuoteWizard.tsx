@@ -246,7 +246,7 @@ function StepDetails({ s, set, onNext, headingRef }: { s: State; set: (p: Partia
         }}
       >
         <div>
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none sm:text-[2.1rem]">
+          <h1 ref={headingRef} tabIndex={-1} className="text-[1.9rem] leading-tight outline-none sm:text-[2.2rem]">
             Enter Enquiry Details
           </h1>
           <p className="mt-1.5 text-muted">Paste the customer&apos;s WhatsApp message, or enter manually.</p>
@@ -384,7 +384,7 @@ function StepDesign({
     >
       <div className="space-y-5">
         <div>
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none sm:text-[2.1rem]">
+          <h1 ref={headingRef} tabIndex={-1} className="text-[1.9rem] leading-tight outline-none sm:text-[2.2rem]">
             Select Design &amp; Specifications
           </h1>
           {s.parsedMissing.length > 0 && s.enquiryText.trim() && (
@@ -575,7 +575,7 @@ function StepReview({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none sm:text-[2.1rem]">
+          <h1 ref={headingRef} tabIndex={-1} className="text-[1.9rem] leading-tight outline-none sm:text-[2.2rem]">
             Quote Preview
           </h1>
           <p className="mt-1.5 text-muted">Review the details before sending to customer.</p>
@@ -700,7 +700,7 @@ function StepSend({
             <path d="M25 41 l10 10 l20 -22" fill="none" stroke="rgb(var(--forest))" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50" strokeDashoffset="50" className="animate-draw" />
           </svg>
         </div>
-        <h1 ref={headingRef} tabIndex={-1} className="text-2xl outline-none">
+        <h1 ref={headingRef} tabIndex={-1} className="title-sans text-[1.4rem] outline-none">
           Quote link ready!
         </h1>
         <p className="mt-1 text-muted">Share this link with your customer on WhatsApp.</p>

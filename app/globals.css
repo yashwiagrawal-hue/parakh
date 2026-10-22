@@ -2,46 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens (RGB triplets). ivory #F7F3EA, forest #294B39, gold #C5A46D, white #FFFFFF */
+/*
+ * Design tokens (RGB triplets), tuned to the concept board.
+ * Ivory #F7F3EA page · white cards · forest #294B39 primary · gold #C5A46D accents.
+ * Always light: the board is an off-white design, so there is no dark theme.
+ */
 :root {
   --ivory: 247 243 234;
   --surface: 255 255 255;
   --forest: 41 75 57;
-  --forest-tint: 234 241 235;
+  --forest-tint: 237 243 238; /* active nav, rate card, highlighted rows */
   --on-forest: 255 255 255;
   --gold: 197 164 109;
-  --gold-tint: 251 245 233;
-  --gold-ink: 140 104 46; /* gold dark enough for text on ivory (AA) */
-  --ink: 31 36 32;
-  --muted: 104 102 92;
-  --line: 232 224 207;
-  --up: 176 52 44;
-  --down: 34 120 70;
-  --pill-sent: 225 242 229;
-  --pill-sent-ink: 30 105 60;
-  --pill-viewed: 252 239 208;
-  --pill-viewed-ink: 140 88 10;
-  --pill-paid: 223 236 250;
-  --pill-paid-ink: 30 85 150;
-  --pill-muted: 236 233 226;
+  --gold-tint: 251 246 236; /* total and rate-lock strips */
+  --gold-ink: 141 107 62; /* gold for small text, AA on ivory and white */
+  --gold-soft: 168 135 90; /* gold for large display italics */
+  --ink: 35 38 33;
+  --muted: 112 108 98;
+  --line: 233 227 214;
+  --up: 178 58 48;
+  --down: 36 122 74;
+  --pill-sent: 228 242 231;
+  --pill-sent-ink: 32 104 62;
+  --pill-viewed: 252 240 212;
+  --pill-viewed-ink: 138 90 14;
+  --pill-paid: 226 237 250;
+  --pill-paid-ink: 32 86 150;
+  --pill-muted: 238 235 228;
 }
-
 
 html {
   color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* The board's desktop UI is set slightly smaller and finer; phones keep 16px for legibility. */
+@media (min-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
 }
 
 body {
   @apply bg-ivory font-sans text-ink antialiased;
+  font-feature-settings: "cv11", "ss01";
+  text-rendering: optimizeLegibility;
 }
 
-/* Logo and headings: DM Serif Display (one weight, so never bolded). Everything else: Inter. */
+/* Logo and page titles: DM Serif Display (one weight, never bolded). Everything else: Inter. */
 h1,
 h2,
 h3 {
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 400;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
+  color: rgb(var(--ink));
+}
+
+::selection {
+  background: rgb(var(--forest-tint));
+  color: rgb(var(--forest));
 }
 
 :focus-visible {
@@ -59,19 +79,23 @@ h3 {
     @apply rounded-card border border-line bg-surface shadow-soft;
   }
   .field {
-    @apply w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink placeholder:text-muted/70 focus:border-forest;
+    @apply w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-[0.95rem] text-ink transition placeholder:text-muted/70 hover:border-[#D9CFBC] focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/10;
   }
   .label {
-    @apply mb-1.5 block text-sm font-medium text-ink;
+    @apply mb-1.5 block text-sm font-medium text-ink/90;
   }
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-forest px-5 py-2.5 text-base font-semibold text-on-forest transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-forest px-5 py-2.5 text-[0.95rem] font-medium tracking-[0.01em] text-on-forest shadow-[0_1px_2px_rgb(20_40_30/0.18)] transition hover:bg-[#23412F] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-outline {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-5 py-2.5 text-base font-medium text-ink transition hover:border-forest;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-5 py-2.5 text-[0.95rem] font-medium text-ink transition hover:border-forest/50 hover:bg-[#FCFBF8];
   }
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-gold-ink;
+    @apply text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-gold-ink;
+  }
+  /* Sans headings where the board uses them (dashboard greeting, card titles, success dialog). */
+  .title-sans {
+    @apply font-sans font-semibold tracking-[-0.01em];
   }
 }
 

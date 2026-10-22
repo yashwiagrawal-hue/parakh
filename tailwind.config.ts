@@ -20,6 +20,7 @@ const config: Config = {
         gold: token("gold"),
         "gold-tint": token("gold-tint"),
         "gold-ink": token("gold-ink"),
+        "gold-soft": token("gold-soft"),
         ink: token("ink"),
         muted: token("muted"),
         line: token("line"),
@@ -38,11 +39,11 @@ const config: Config = {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        card: "14px",
+        card: "12px",
       },
       boxShadow: {
-        soft: "0 1px 2px rgb(60 45 20 / 0.04), 0 4px 16px rgb(60 45 20 / 0.06)",
-        lift: "0 8px 30px rgb(60 45 20 / 0.12)",
+        soft: "0 1px 2px rgb(60 45 20 / 0.03), 0 6px 20px -8px rgb(60 45 20 / 0.08)",
+        lift: "0 18px 40px -12px rgb(60 45 20 / 0.22), 0 2px 6px rgb(60 45 20 / 0.06)",
       },
       keyframes: {
         pop: {

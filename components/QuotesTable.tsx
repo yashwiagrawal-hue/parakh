@@ -19,32 +19,32 @@ export default function QuotesTable({ quotes }: { quotes: QuoteRow[] }) {
     <>
       <table className="hidden w-full text-sm md:table">
         <thead>
-          <tr className="border-b border-line text-left text-muted">
-            <th scope="col" className="py-3 pr-4 font-medium">Customer</th>
-            <th scope="col" className="py-3 pr-4 font-medium">Design</th>
+          <tr className="border-b border-line bg-[#FAF7F1] text-left text-[0.8rem] text-muted">
+            <th scope="col" className="px-3 py-2.5 font-medium">Customer</th>
+            <th scope="col" className="px-3 py-2.5 font-medium">Design</th>
             <th scope="col" className="py-3 pr-4 text-right font-medium">Weight</th>
             <th scope="col" className="py-3 pr-4 text-right font-medium">Total Amount</th>
-            <th scope="col" className="py-3 pr-4 font-medium">Status</th>
-            <th scope="col" className="py-3 font-medium">Date</th>
+            <th scope="col" className="px-3 py-2.5 font-medium">Status</th>
+            <th scope="col" className="px-3 py-2.5 font-medium">Date</th>
           </tr>
         </thead>
         <tbody>
           {quotes.map((q) => (
             <tr key={q.slug} className="group border-b border-line/70 last:border-0 hover:bg-forest-tint/40">
-              <td className="py-3.5 pr-4">
+              <td className="px-3 py-3.5">
                 <Link href={`/q/${q.slug}`} className="font-medium underline-offset-4 hover:underline group-hover:text-forest">
                   {q.customerName ?? "Customer"}
                 </Link>
               </td>
-              <td className="py-3.5 pr-4">{q.designName}</td>
-              <td className="tnum py-3.5 pr-4 text-right">
+              <td className="px-3 py-3.5">{q.designName}</td>
+              <td className="tnum px-3 py-3.5 text-right">
                 {q.weightMin === q.weightMax ? formatGramsFixed(q.weightMin) : formatWeightRange(q.weightMin, q.weightMax)}
               </td>
-              <td className="tnum py-3.5 pr-4 text-right">{formatTotal(q.breakdown)}</td>
-              <td className="py-3.5 pr-4">
+              <td className="tnum px-3 py-3.5 text-right">{formatTotal(q.breakdown)}</td>
+              <td className="px-3 py-3.5">
                 <StatusPill status={effectiveStatus(q)} />
               </td>
-              <td className="tnum py-3.5 text-muted">{formatDate(q.createdAt)}</td>
+              <td className="tnum px-3 py-3.5 text-muted">{formatDate(q.createdAt)}</td>
             </tr>
           ))}
         </tbody>

@@ -69,8 +69,8 @@ export default function LandingPage() {
               <p className="eyebrow">Fair prices. Happy customers.</p>
               <h1 className="mt-6 font-serif text-[2.5rem] font-normal leading-[1.12] tracking-[-0.01em] sm:text-5xl lg:text-[2.7rem] xl:text-[3.1rem]">
                 Turn WhatsApp enquiries <br className="hidden lg:block" />
-                into <em className="text-gold-ink">trusted jewellery quotes</em> <br className="hidden lg:block" />
-                <em>in under</em> <em className="text-gold-ink">2&nbsp;minutes.</em>
+                into <em className="text-gold-soft">trusted jewellery quotes</em> <br className="hidden lg:block" />
+                <em>in under</em> <em className="text-gold-soft">2&nbsp;minutes.</em>
               </h1>
               <p className="mt-7 max-w-md text-lg leading-relaxed text-ink/80">
                 Full price breakup, IBJA comparison and written rate-lock terms — all in one link.

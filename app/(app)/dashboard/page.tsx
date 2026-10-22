@@ -26,16 +26,16 @@ export default async function DashboardPage() {
   const expiringSoon = open.filter((q) => Date.parse(q.rateLockExpiresAt) - now.getTime() < 48 * HOUR).length;
 
   const stats = [
-    { icon: FileText, value: sentThisWeek, label: "Quotes sent this week", tone: "bg-forest-tint text-forest" },
-    { icon: Hourglass, value: open.length, label: "Pending payments", tone: "bg-gold-tint text-gold-ink" },
-    { icon: BellRing, value: expiringSoon, label: "Rate locks expiring soon", tone: "bg-pill-viewed text-up" },
+    { icon: FileText, value: sentThisWeek, label: "Quotes sent this week", tone: "bg-forest-tint text-forest ring-1 ring-forest/10" },
+    { icon: Hourglass, value: open.length, label: "Pending payments", tone: "bg-gold-tint text-gold-ink ring-1 ring-gold/20" },
+    { icon: BellRing, value: expiringSoon, label: "Rate locks expiring soon", tone: "bg-[#FBEBE8] text-up" },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-[1.65rem]">
+          <h1 className="title-sans text-[1.45rem] sm:text-[1.6rem]">
             {greeting(now)}, {j.name} <span aria-hidden>👋</span>
           </h1>
           <p className="mt-1 text-muted">Here&apos;s your overview for today.</p>
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
 
       <section aria-labelledby="recent-h" className="card p-4 sm:p-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 id="recent-h" className="text-lg">
+          <h2 id="recent-h" className="title-sans text-[1.05rem]">
             Recent Quotes
           </h2>
           <Link href="/quotes" className="text-sm font-medium text-forest underline-offset-4 hover:underline">
