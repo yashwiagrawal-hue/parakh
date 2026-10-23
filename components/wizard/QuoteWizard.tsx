@@ -11,6 +11,7 @@ import {
   Paperclip,
   PenLine,
   Pencil,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -46,6 +47,11 @@ interface State {
   wastagePct: string;
   stones: string;
   parsedMissing: string[];
+  /** What the AI (or rule-based) reader could not confirm: "missing" or "check" per field. */
+  flags: Record<string, "missing" | "check">;
+  designNotes: string | null;
+  aiRead: boolean;
+  reading: boolean;
   slug: string | null;
 }
 
@@ -78,6 +84,10 @@ export default function QuoteWizard({ jeweller, designs }: { jeweller: Jeweller;
     wastagePct: String(jeweller.defaultWastagePct),
     stones: "0",
     parsedMissing: [],
+    flags: {},
+    designNotes: null,
+    aiRead: false,
+    reading: false,
     slug: null,
   });
   const set = (patch: Partial<State>) => dispatch({ type: "set", patch });
@@ -120,17 +130,31 @@ export default function QuoteWizard({ jeweller, designs }: { jeweller: Jeweller;
             s={s}
             set={set}
             headingRef={headingRef}
-            onNext={() => {
-              const p = parseEnquiry(s.enquiryText);
-              const patch: Partial<State> = { parsedMissing: p.missing };
-              if (p.purity) patch.purity = p.purity;
-              if (p.weightMin !== null && p.weightMax !== null) {
-                patch.weightMin = String(p.weightMin);
-                patch.weightMax = String(p.weightMax);
+            onNext={async () => {
+              if (s.reading) return;
+              const text = s.enquiryText.trim();
+              if (!text) return go(2);
+              set({ reading: true });
+              // AI reads the message on the server (every value is checked against the text there).
+              // If AI is off or unreachable, the rule-based reader runs here instead.
+              let r: { category: Category | null; purity: Purity | null; weightMin: number | null; weightMax: number | null; designNotes: string | null; flags: State["flags"]; aiUsed: boolean };
+              try {
+                const res = await fetch("/api/ai/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+                if (!res.ok) throw new Error("ai parse failed");
+                r = await res.json();
+              } catch {
+                const p = parseEnquiry(text);
+                r = { ...p, designNotes: null, aiUsed: false, flags: Object.fromEntries(p.missing.map((m) => [m, "missing" as const])) };
               }
-              if (p.category) {
-                const match = designs.find((d) => d.category === p.category);
-                patch.category = p.category;
+              const patch: Partial<State> = { reading: false, flags: r.flags, designNotes: r.designNotes, aiRead: r.aiUsed, parsedMissing: [] };
+              if (r.purity) patch.purity = r.purity;
+              if (r.weightMin !== null && r.weightMax !== null) {
+                patch.weightMin = String(r.weightMin);
+                patch.weightMax = String(r.weightMax);
+              }
+              if (r.category) {
+                const match = designs.find((d) => d.category === r.category);
+                patch.category = r.category;
                 patch.designId = match?.id ?? null;
               }
               set(patch);
@@ -315,8 +339,16 @@ function StepDetails({ s, set, onNext, headingRef }: { s: State; set: (p: Partia
           </div>
         </div>
 
-        <button className="btn">
-          Generate Quote <ArrowRight aria-hidden size={18} />
+        <button className="btn" disabled={s.reading}>
+          {s.reading ? (
+            <>
+              <Sparkles aria-hidden size={17} className="animate-pulse" /> Reading the enquiry…
+            </>
+          ) : (
+            <>
+              Generate Quote <ArrowRight aria-hidden size={18} />
+            </>
+          )}
         </button>
       </form>
 
@@ -387,10 +419,20 @@ function StepDesign({
           <h1 ref={headingRef} tabIndex={-1} className="text-[1.9rem] leading-tight outline-none sm:text-[2.2rem]">
             Select Design &amp; Specifications
           </h1>
-          {s.parsedMissing.length > 0 && s.enquiryText.trim() && (
-            <p className="mt-1.5 text-sm text-gold-ink">
-              Not found in the message: {s.parsedMissing.join(", ")}. Please fill these in.
-            </p>
+          {s.enquiryText.trim() && (
+            <div className="mt-3 space-y-1.5 rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+              <p className="flex items-center gap-1.5 font-medium">
+                <Sparkles aria-hidden size={15} className="text-gold-ink" />
+                {s.aiRead ? "Read by AI from the customer's message. Check every field before continuing." : "Filled in from the customer's message. Check every field before continuing."}
+              </p>
+              {s.designNotes && <p className="text-muted">Design asked for: {s.designNotes}</p>}
+              {Object.entries(s.flags).map(([field, flag]) => (
+                <p key={field} className="text-gold-ink">
+                  {field === "weight" ? "Weight" : field === "purity" ? "Purity" : "Design"}:{" "}
+                  {flag === "check" ? "not found in message, please check" : "not in the message, please fill in"}
+                </p>
+              ))}
+            </div>
           )}
         </div>
         <fieldset>
@@ -660,7 +702,7 @@ function StepSend({
   const [copied, setCopied] = useState(false);
   useEffect(() => setOrigin(window.location.origin), []);
   const url = `${origin}/q/${s.slug}`;
-  const message = quoteMessage({
+  const standard = quoteMessage({
     customerName: s.customerName,
     jewellerName: jeweller.name,
     designName,
@@ -672,6 +714,22 @@ function StepSend({
     rateLockAdvancePct: jeweller.rateLockAdvancePct,
     url,
   });
+
+  // AI drafts the reply on the server; numbers are filled in from the saved quote. The jeweller edits and approves it.
+  const [draft, setDraft] = useState<{ state: "loading" | "ready"; text: string; ai: boolean }>({ state: "loading", text: "", ai: false });
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/ai/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: s.slug, designNotes: s.designNotes }) })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { message: string; aiUsed: boolean } | null) => {
+        if (!cancelled) setDraft(d ? { state: "ready", text: d.message, ai: d.aiUsed } : { state: "ready", text: "", ai: false });
+      })
+      .catch(() => !cancelled && setDraft({ state: "ready", text: "", ai: false }));
+    return () => {
+      cancelled = true;
+    };
+  }, [s.slug, s.designNotes]);
+  const message = draft.state === "ready" && draft.text ? draft.text : standard;
 
   async function copy() {
     try {
@@ -719,8 +777,44 @@ function StepSend({
           {copied ? "Link copied" : ""}
         </p>
 
+        <div className="mt-5 text-left">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <label htmlFor="wa-message" className="label mb-0">
+              Message to your customer
+            </label>
+            {draft.state === "ready" && (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${draft.ai ? "bg-gold-tint text-gold-ink" : "bg-pill-muted text-muted"}`}>
+                <Sparkles aria-hidden size={12} /> {draft.ai ? "Drafted by AI" : "Standard message"}
+              </span>
+            )}
+          </div>
+          {draft.state === "loading" ? (
+            <div role="status" className="flex min-h-[9rem] items-center justify-center gap-2 rounded-lg border border-line bg-ivory text-sm text-muted">
+              <Sparkles aria-hidden size={16} className="animate-pulse text-gold-ink" /> Writing a reply with today&apos;s rate…
+            </div>
+          ) : (
+            <textarea
+              id="wa-message"
+              rows={7}
+              maxLength={1500}
+              value={message}
+              onChange={(e) => setDraft({ state: "ready", text: e.target.value, ai: draft.ai })}
+              className="field resize-y text-[0.9rem] leading-relaxed"
+            />
+          )}
+          <p className="mt-1.5 text-xs text-muted">
+            Read and edit before sending. Prices, rate and link are filled in from this quote, never written by the AI.
+          </p>
+        </div>
+
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <a href={whatsappUrl(s.customerPhone, message)} target="_blank" rel="noopener noreferrer" className="btn">
+          <a
+            href={whatsappUrl(s.customerPhone, message)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled={draft.state === "loading"}
+            className={`btn ${draft.state === "loading" ? "pointer-events-none opacity-50" : ""}`}
+          >
             <MessageCircle aria-hidden size={18} /> Send on WhatsApp
           </a>
           <a href={`/q/${s.slug}`} target="_blank" rel="noopener noreferrer" className="btn-outline">

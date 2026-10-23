@@ -1,39 +1,41 @@
 {
-    "name":  "parakh",
-    "version":  "0.1.0",
-    "private":  true,
-    "description":  "Parakh: checkable custom-jewellery quotes for small Mumbai jewellers",
-    "engines":  {
-                    "node":  "\u003e=20"
-                },
-    "scripts":  {
-                    "dev":  "next dev",
-                    "build":  "next build",
-                    "start":  "next start",
-                    "lint":  "next lint",
-                    "test":  "vitest run",
-                    "seed":  "tsx scripts/seed.ts"
-                },
-    "dependencies":  {
-                         "@vercel/blob":  "^2.8.2",
-                         "lucide-react":  "^0.460.0",
-                         "nanoid":  "^5.0.7",
-                         "next":  "^14.2.15",
-                         "react":  "^18.3.1",
-                         "react-dom":  "^18.3.1",
-                         "zod":  "^3.23.8"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^20.14.0",
-                            "@types/react":  "^18.3.3",
-                            "@types/react-dom":  "^18.3.0",
-                            "autoprefixer":  "^10.4.19",
-                            "eslint":  "^8.57.0",
-                            "eslint-config-next":  "^14.2.15",
-                            "postcss":  "^8.4.39",
-                            "tailwindcss":  "^3.4.6",
-                            "tsx":  "^4.19.2",
-                            "typescript":  "^5.5.3",
-                            "vitest":  "^2.0.5"
-                        }
+    "name": "parakh",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Parakh: checkable custom-jewellery quotes for small Mumbai jewellers",
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "test": "vitest run",
+        "seed": "tsx scripts/seed.ts"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.32.1",
+        "@vercel/blob": "^2.8.2",
+        "lucide-react": "^0.460.0",
+        "nanoid": "^5.0.7",
+        "next": "^14.2.15",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "server-only": "^0.0.1",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.0",
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
+        "autoprefixer": "^10.4.19",
+        "eslint": "^8.57.0",
+        "eslint-config-next": "^14.2.15",
+        "postcss": "^8.4.39",
+        "tailwindcss": "^3.4.6",
+        "tsx": "^4.19.2",
+        "typescript": "^5.5.3",
+        "vitest": "^2.0.5"
+    }
 }

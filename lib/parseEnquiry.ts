@@ -13,7 +13,7 @@ export interface ParsedEnquiry {
   missing: ("category" | "purity" | "weight")[];
 }
 
-const CATEGORY_WORDS: [Category, RegExp][] = [
+export const CATEGORY_WORDS: [Category, RegExp][] = [
   ["Earrings", /\b(earrings?|jhumk[ae]s?|jhumki|bali|balis|studs?|tops)\b|झुमके|झुमका/iu],
   ["Necklace", /\b(necklace|haar|rani haar|choker)\b|हार|नेकलेस/iu],
   ["Bracelet", /\b(bracelets?|kangan)\b|ब्रेसलेट/iu],
